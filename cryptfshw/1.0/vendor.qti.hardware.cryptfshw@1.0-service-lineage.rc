@@ -1,0 +1,4 @@
+service vendor.cryptfshw-hal-1-0-lineage /vendor/bin/hw/vendor.qti.hardware.cryptfshw@1.0-service-lineage
+    class hal
+    user system
+    group system drmrpc
