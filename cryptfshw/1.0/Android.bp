@@ -18,10 +18,7 @@ cc_binary {
     defaults: ["hidl_defaults"],
     relative_install_path: "hw",
     proprietary: true,
-    header_libs: [
-        "qseecom-kernel-headers",
-        "libcryptfs_hw_headers",
-    ],
+    header_libs: ["qseecom-kernel-headers"],
     cflags: ["-DCONFIG_HW_DISK_ENCRYPTION"],
     srcs: [
         "CryptfsHw.cpp",
@@ -30,7 +27,6 @@ cc_binary {
     shared_libs: [
         "libcutils",
         "libutils",
-        "libcryptfs_hw",
         "liblog",
         "libhidlbase",
         "libhidltransport",

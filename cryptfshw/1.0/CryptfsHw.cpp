@@ -23,10 +23,8 @@
 #include <dirent.h>
 #include <errno.h>
 #include <log/log.h>
-#include <linux/qseecom.h>
 #include <cutils/properties.h>
-
-#include "cryptfs_hw.h"
+#include <linux/qseecom.h>
 #include "CryptfsHw.h"
 
 namespace {
@@ -220,7 +218,22 @@ int CryptfsHw::cryptfs_hw_update_key(enum cryptfs_hw_key_management_usage_type u
 
 enum cryptfs_hw_key_management_usage_type CryptfsHw::map_usage(
         enum cryptfs_hw_key_management_usage_type usage) {
-    int storage_type = is_ice_enabled();
+    char prop_storage[PATH_MAX];
+    int storage_type = 0;
+
+    /* is_ice_enabled() */
+    if (property_get("ro.boot.bootdevice", prop_storage, "")) {
+      if (strstr(prop_storage, "ufs")) {
+          /* All UFS based devices has ICE in it. So we dont need
+           * to check if corresponding device exists or not
+           */
+          storage_type = QTI_ICE_STORAGE_UFS;
+      } else if (strstr(prop_storage, "sdhc")) {
+          if (access("/dev/icesdcc", F_OK) != -1)
+              storage_type = QTI_ICE_STORAGE_SDCC;
+      }
+    }
+
     if (usage == CRYPTFS_HW_KM_USAGE_DISK_ENCRYPTION) {
         if (storage_type == QTI_ICE_STORAGE_UFS) {
             return CRYPTFS_HW_KM_USAGE_UFS_ICE_DISK_ENCRYPTION;
@@ -269,7 +282,7 @@ int CryptfsHw::is_qseecom_up() {
 int CryptfsHw::set_key(const char* currentpasswd, const char* passwd, const char* enc_mode,
                        int operation) {
     int err = -1;
-    if (is_hw_disk_encryption(enc_mode)) {
+    if (enc_mode && !strcmp(enc_mode, "aes-xts")) {  /* is_hw_disk_encryption() */
         unsigned char* tmp_passwd = get_tmp_passwd(passwd);
         unsigned char* tmp_currentpasswd = get_tmp_passwd(currentpasswd);
         if (tmp_passwd) {
